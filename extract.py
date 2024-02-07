@@ -30,3 +30,6 @@ plt.title('Lateral Acceleration Over Time')
 plt.xlabel('Sample Number')
 plt.ylabel('Lateral Acceleration (m/s^2)')
 plt.show()
+
+
+
