@@ -5,7 +5,7 @@ from rosbags.serde import deserialize_cdr
 latitudes = []
 longitudes = []
 
-with Reader('/path/to/your/rosbag2_file') as reader:
+with Reader('bags/tum_performance_gps') as reader:
     for connection, timestamp, rawdata in reader.messages():
         if connection.topic == '/vectornav/gnss':
             msg = deserialize_cdr(rawdata, connection.msgtype)
@@ -42,3 +42,14 @@ origin_lon = longitudes[0]
 x, y = latlon_to_local(latitudes, longitudes, origin_lat, origin_lon)
 
 
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 6))
+plt.plot(x, y, label='Trajectory', marker='.', markersize=2, linestyle='-')
+plt.xlabel('X Position (meters)')
+plt.ylabel('Y Position (meters)')
+plt.title('Racecar Trajectory with Arbitrary Origin (0,0)')
+plt.legend()
+plt.axis('equal')  # Ensures equal aspect ratio
+plt.grid(True)
+plt.show()
