@@ -69,28 +69,56 @@ def detect_laps(x, y, threshold=2, cooldown=3):
 
 laps = detect_laps(x, y)
 
+import numpy as np
+
+def calculate_curvature(x, y):
+    # First derivatives (Central difference for interior points)
+    dx = np.gradient(x)
+    dy = np.gradient(y)
+    
+    # Second derivatives
+    ddx = np.gradient(dx)
+    ddy = np.gradient(dy)
+    
+    # Curvature formula
+    curvature = np.abs(dx * ddy - dy * ddx) / np.power(dx**2 + dy**2, 1.5)
+    
+    # Handle division by zero in curvature calculation
+    curvature[np.isnan(curvature)] = 0
+    curvature[np.isinf(curvature)] = 0
+    
+    return curvature
+
+
+
 import matplotlib.pyplot as plt
+from matplotlib.cm import viridis
+from matplotlib.colors import Normalize
 
-# Number of laps
-num_laps = len(laps)
-
-# Determine the layout size
-cols = 2  # For example, arrange plots in 2 columns
-rows = num_laps // cols + (num_laps % cols > 0)  # Calculate required rows
-
-plt.figure(figsize=(15, rows * 5))  # Adjust figure size as needed
-
+# Assuming 'laps' is a list of laps, each a list of (x, y) points
 for i, lap in enumerate(laps):
     lap_x, lap_y = zip(*lap)  # Unpack coordinates
-    ax = plt.subplot(rows, cols, i+1)  # Create a subplot for each lap
-    ax.plot(lap_x, lap_y, marker='.', markersize=2, linestyle='-', label=f'Lap {i+1}')
-    ax.plot(0, 0, 'ro', label='Start/Finish Line')  # Mark the start/finish line
+    lap_x = np.array(lap_x)
+    lap_y = np.array(lap_y)
+    
+    # Calculate curvature
+    curvature = calculate_curvature(lap_x, lap_y)
+    
+    # Normalize curvature for color mapping
+    norm = Normalize(vmin=min(curvature), vmax=max(curvature))
+    
+    fig, ax = plt.subplots()
+    
+    # Plot lap with curvature colors
+    scatter = ax.scatter(lap_x, lap_y, c=curvature, cmap='viridis', norm=norm)
+    
+    # Add color bar
+    cbar = fig.colorbar(scatter, ax=ax)
+    cbar.set_label('Curvature')
+    
+    ax.set_title(f'Lap {i+1} Curvature')
     ax.set_xlabel('X Position (meters)')
     ax.set_ylabel('Y Position (meters)')
-    ax.set_title(f'Lap {i+1}')
-    ax.legend()
     ax.axis('equal')
-    ax.grid(True)
-
-plt.tight_layout()  # Adjust layout to prevent overlap
+    
 plt.show()
