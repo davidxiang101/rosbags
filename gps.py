@@ -40,13 +40,37 @@ origin_lon = 9.281167   # Updated origin longitude
 
 x, y = latlon_to_local(latitudes, longitudes, origin_lat, origin_lon)
 
+# Function to detect laps based on crossing the start/finish line
+def detect_laps(x, y, threshold=10):
+    laps = []
+    current_lap = []
+    for i in range(len(x)):
+        distance = np.sqrt(x[i]**2 + y[i]**2)  # Distance from start/finish
+        if distance <= threshold:
+            if current_lap:  # Avoid adding very first point if it's near start/finish
+                laps.append(current_lap)
+            current_lap = []
+        current_lap.append((x[i], y[i]))
+    if current_lap:  # Add the last lap if not empty
+        laps.append(current_lap)
+    return laps
+
+# Assuming a threshold distance to the start/finish line (adjust as necessary)
+threshold_distance = 10  # meters, adjust based on track and GPS accuracy
+
+laps = detect_laps(x, y, threshold_distance)
+
+# Plot each lap with a different color
 plt.figure(figsize=(10, 6))
-plt.plot(x, y, label='Trajectory', marker='.', markersize=2, linestyle='-')
-plt.plot(0, 0, marker='o', markersize=5, color='red', label='Starting Line')  # Mark the starting line
+for i, lap in enumerate(laps):
+    lap_x, lap_y = zip(*lap)  # Unpack coordinates
+    plt.plot(lap_x, lap_y, label=f'Lap {i+1}')
+
+plt.plot(0, 0, 'ro', label='Start/Finish Line')  # Mark the start/finish line
 plt.xlabel('X Position (meters)')
 plt.ylabel('Y Position (meters)')
-plt.title('Racecar Trajectory with Monza Starting Line as Origin')
+plt.title('Racecar Trajectory Separated Into Laps')
 plt.legend()
-plt.axis('equal')  # Ensures equal aspect ratio
+plt.axis('equal')
 plt.grid(True)
 plt.show()
