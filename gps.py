@@ -1,5 +1,7 @@
 from rosbags.rosbag2 import Reader
 from rosbags.serde import deserialize_cdr
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Initialize lists to store latitude and longitude
 latitudes = []
@@ -11,9 +13,6 @@ with Reader('bags/tum_performance_gps') as reader:
             msg = deserialize_cdr(rawdata, connection.msgtype)
             latitudes.append(msg.latitude)
             longitudes.append(msg.longitude)
-
-
-import numpy as np
 
 def latlon_to_local(latitudes, longitudes, origin_lat, origin_lon):
     # Earth's radius in meters
@@ -35,20 +34,18 @@ def latlon_to_local(latitudes, longitudes, origin_lat, origin_lon):
     
     return x, y
 
-# Assuming the first GPS coordinate is the origin
-origin_lat = latitudes[0]
-origin_lon = longitudes[0]
+# Starting line coordinates in decimal degrees
+origin_lat = 45.618972  # Updated origin latitude
+origin_lon = 9.281167   # Updated origin longitude
 
 x, y = latlon_to_local(latitudes, longitudes, origin_lat, origin_lon)
 
-
-import matplotlib.pyplot as plt
-
 plt.figure(figsize=(10, 6))
 plt.plot(x, y, label='Trajectory', marker='.', markersize=2, linestyle='-')
+plt.plot(0, 0, marker='o', markersize=5, color='red', label='Starting Line')  # Mark the starting line
 plt.xlabel('X Position (meters)')
 plt.ylabel('Y Position (meters)')
-plt.title('Racecar Trajectory with Arbitrary Origin (0,0)')
+plt.title('Racecar Trajectory with Monza Starting Line as Origin')
 plt.legend()
 plt.axis('equal')  # Ensures equal aspect ratio
 plt.grid(True)
