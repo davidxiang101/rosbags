@@ -69,17 +69,28 @@ def detect_laps(x, y, threshold=2, cooldown=3):
 
 laps = detect_laps(x, y)
 
-# Plot each lap with a different color
-plt.figure(figsize=(10, 6))
+import matplotlib.pyplot as plt
+
+# Number of laps
+num_laps = len(laps)
+
+# Determine the layout size
+cols = 2  # For example, arrange plots in 2 columns
+rows = num_laps // cols + (num_laps % cols > 0)  # Calculate required rows
+
+plt.figure(figsize=(15, rows * 5))  # Adjust figure size as needed
+
 for i, lap in enumerate(laps):
     lap_x, lap_y = zip(*lap)  # Unpack coordinates
-    plt.plot(lap_x, lap_y, label=f'Lap {i+1}')
+    ax = plt.subplot(rows, cols, i+1)  # Create a subplot for each lap
+    ax.plot(lap_x, lap_y, marker='.', markersize=2, linestyle='-', label=f'Lap {i+1}')
+    ax.plot(0, 0, 'ro', label='Start/Finish Line')  # Mark the start/finish line
+    ax.set_xlabel('X Position (meters)')
+    ax.set_ylabel('Y Position (meters)')
+    ax.set_title(f'Lap {i+1}')
+    ax.legend()
+    ax.axis('equal')
+    ax.grid(True)
 
-plt.plot(0, 0, 'ro', label='Start/Finish Line')  # Mark the start/finish line
-plt.xlabel('X Position (meters)')
-plt.ylabel('Y Position (meters)')
-plt.title('Racecar Trajectory Separated Into Laps')
-plt.legend()
-plt.axis('equal')
-plt.grid(True)
+plt.tight_layout()  # Adjust layout to prevent overlap
 plt.show()
