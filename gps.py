@@ -69,33 +69,36 @@ def detect_laps(x, y, threshold=2, cooldown=3):
 
 laps = detect_laps(x, y)
 
+import tkinter as tk
+from tkinter import ttk
 import numpy as np
-
-def calculate_curvature(x, y):
-    # First derivatives (Central difference for interior points)
-    dx = np.gradient(x)
-    dy = np.gradient(y)
-    
-    # Second derivatives
-    ddx = np.gradient(dx)
-    ddy = np.gradient(dy)
-    
-    # Curvature formula
-    curvature = np.abs(dx * ddy - dy * ddx) / np.power(dx**2 + dy**2, 1.5)
-    
-    # Handle division by zero in curvature calculation
-    curvature[np.isnan(curvature)] = 0
-    curvature[np.isinf(curvature)] = 0
-    
-    return curvature
-
-
-
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.cm import viridis
 from matplotlib.colors import Normalize
 
-# Assuming 'laps' is a list of laps, each a list of (x, y) points
+# Curvature calculation function
+def calculate_curvature(x, y):
+    dx = np.gradient(x)
+    dy = np.gradient(y)
+    ddx = np.gradient(dx)
+    ddy = np.gradient(dy)
+    curvature = np.abs(dx * ddy - dy * ddx) / np.power(dx**2 + dy**2, 1.5)
+    curvature[np.isnan(curvature)] = 0
+    curvature[np.isinf(curvature)] = 0
+    return curvature
+
+# Assuming 'laps' is your list of laps with each lap being a list of (x, y) tuples
+# Example: laps = [[(x1, y1), (x2, y2), ...], [...], ...]
+
+# Create the main window
+root = tk.Tk()
+root.title("Lap Plots with Curvature")
+
+# Create a tab control
+tabControl = ttk.Notebook(root)
+
+# For each lap, create a tab with a plot showing curvature
 for i, lap in enumerate(laps):
     lap_x, lap_y = zip(*lap)  # Unpack coordinates
     lap_x = np.array(lap_x)
@@ -103,22 +106,28 @@ for i, lap in enumerate(laps):
     
     # Calculate curvature
     curvature = calculate_curvature(lap_x, lap_y)
-    
-    # Normalize curvature for color mapping
     norm = Normalize(vmin=min(curvature), vmax=max(curvature))
+
+    # Creating a tab for each lap
+    tab = ttk.Frame(tabControl)
+    tabControl.add(tab, text=f'Lap {i+1}')
     
-    fig, ax = plt.subplots()
-    
-    # Plot lap with curvature colors
-    scatter = ax.scatter(lap_x, lap_y, c=curvature, cmap='viridis', norm=norm)
-    
-    # Add color bar
+    # Creating a figure for the plot
+    fig, ax = plt.subplots(figsize=(6, 4))
+    scatter = ax.scatter(lap_x, lap_y, c=curvature, cmap='viridis', norm=norm, s=10)  # Adjust size with `s`
     cbar = fig.colorbar(scatter, ax=ax)
     cbar.set_label('Curvature')
-    
+    ax.plot(0, 0, 'ro', markersize=5, label='Start/Finish Line')  # Mark the start/finish line
     ax.set_title(f'Lap {i+1} Curvature')
     ax.set_xlabel('X Position (meters)')
     ax.set_ylabel('Y Position (meters)')
     ax.axis('equal')
-    
-plt.show()
+
+    # Embedding the plot in the GUI
+    canvas = FigureCanvasTkAgg(fig, master=tab)  # A tk.DrawingArea.
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+tabControl.pack(expand=1, fill="both")
+
+root.mainloop()
