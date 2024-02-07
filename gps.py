@@ -40,23 +40,35 @@ origin_lon = 9.281167   # Updated origin longitude
 
 x, y = latlon_to_local(latitudes, longitudes, origin_lat, origin_lon)
 
-# Function to detect laps based on crossing the start/finish line
-def detect_laps(x, y, threshold=10):
+def detect_laps(x, y, threshold=10, cooldown=5):
     laps = []
     current_lap = []
+    lap_in_progress = False
+    cooldown_counter = 0  # Counter to manage cool-down period
+    
     for i in range(len(x)):
         distance = np.sqrt(x[i]**2 + y[i]**2)  # Distance from start/finish
-        if distance <= threshold:
+        if distance <= threshold and not lap_in_progress:
             if current_lap:  # Avoid adding very first point if it's near start/finish
                 laps.append(current_lap)
-            current_lap = []
+                current_lap = []
+            lap_in_progress = True
+            cooldown_counter = cooldown  # Reset cooldown counter
+        elif lap_in_progress and cooldown_counter > 0:
+            cooldown_counter -= 1  # Decrement cooldown counter
+        elif lap_in_progress and cooldown_counter == 0:
+            lap_in_progress = False  # End cool-down period, allow detecting next lap
+        
         current_lap.append((x[i], y[i]))
+        
     if current_lap:  # Add the last lap if not empty
         laps.append(current_lap)
+        
     return laps
 
+
 # Assuming a threshold distance to the start/finish line (adjust as necessary)
-threshold_distance = 10  # meters, adjust based on track and GPS accuracy
+threshold_distance = 2  # meters, adjust based on track and GPS accuracy
 
 laps = detect_laps(x, y, threshold_distance)
 
