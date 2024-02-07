@@ -40,7 +40,7 @@ origin_lon = 9.281167   # Updated origin longitude
 
 x, y = latlon_to_local(latitudes, longitudes, origin_lat, origin_lon)
 
-def detect_laps(x, y, threshold=10, cooldown=5):
+def detect_laps(x, y, threshold=2, cooldown=3):
     laps = []
     current_lap = []
     lap_in_progress = False
@@ -50,6 +50,7 @@ def detect_laps(x, y, threshold=10, cooldown=5):
         distance = np.sqrt(x[i]**2 + y[i]**2)  # Distance from start/finish
         if distance <= threshold and not lap_in_progress:
             if current_lap:  # Avoid adding very first point if it's near start/finish
+                current_lap.append((x[i], y[i]))
                 laps.append(current_lap)
                 current_lap = []
             lap_in_progress = True
@@ -66,11 +67,7 @@ def detect_laps(x, y, threshold=10, cooldown=5):
         
     return laps
 
-
-# Assuming a threshold distance to the start/finish line (adjust as necessary)
-threshold_distance = 2  # meters, adjust based on track and GPS accuracy
-
-laps = detect_laps(x, y, threshold_distance)
+laps = detect_laps(x, y)
 
 # Plot each lap with a different color
 plt.figure(figsize=(10, 6))
